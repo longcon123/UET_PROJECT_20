@@ -7,9 +7,9 @@ Game::Game() {
 	SDL_SetWindowTitle(window, "DEFEAT THE CORONA VIRUS!!!");
 	running = true;
 	count = 0;
-	rick.setDest(rick.x_pos, rick.y_pos, 285, 370);
+	rick.setDest(500, 0, 285, 370);
 	rick.setSource(0, 0, 285, 370);
-	rick.setImage("rickrun1.png",render);
+	rick.setImage("rickRun2.png",render);
 	loopGame();
 }
 Game::~Game() {
@@ -20,10 +20,6 @@ Game::~Game() {
 void Game::loopGame() {
 	static int lastTime;
 	while (running) {
-		lastFrame = SDL_GetTicks();
-		if (lastFrame >= (lastTime + 1000)) {
-			lastTime = lastFrame;
-		}
 		renderGame();
 		inputUser();
 		updateGame();
@@ -38,10 +34,6 @@ void Game::renderGame() {
 	SDL_RenderFillRect(render, &rect);
 	drawObject(rick);
 	rick.setDest(rick.x_pos, rick.y_pos, 285, 370);
-	int timerFPS = SDL_GetTicks() - lastFrame;
-	if (timerFPS < (1000 / 60)) {
-		SDL_Delay((1000 / 60) - timerFPS);
-	}
 	SDL_RenderPresent(render);
 }
 void Game::drawObject(Character o) {
@@ -55,10 +47,12 @@ void Game::inputUser() {
 		if (e.type == SDL_QUIT) { running = 0; cout << "QUIT GAME!" << endl; }
 		if (e.type == SDL_KEYDOWN) {
 			if (e.key.keysym.sym == SDLK_ESCAPE) running = false;
-			if (e.key.keysym.sym == SDLK_d) rick.x_pos+=rick.step;
+			else if (e.key.keysym.sym == SDLK_d) rick.x_pos+=rick.step;
+			else if (e.key.keysym.sym == SDLK_SPACE) rick.y_pos -= 100;
 		}
 		if (e.type == SDL_KEYUP) {
 			if (e.key.keysym.sym == SDLK_d) rick.x_pos+=0;
+			else if (e.key.keysym.sym == SDLK_SPACE && rick.y_pos <= 640) rick.y_pos += 100;
 		}
 	}
 }
