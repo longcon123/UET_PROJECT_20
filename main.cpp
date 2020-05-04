@@ -8,6 +8,49 @@
 #include <cmath>
 constexpr auto PI = 3.14159265;
 using namespace std;
+class Gravity {
+public:
+	int v0fall = 10;
+	int v0jump = 10;
+	int vjump = 0;
+	int vfall = 0;
+	double gjump = 1.8;
+	double gfall = 9.8;
+	double tjump = 0;
+	double tfall = 0;
+	bool setGravity(int& y, int ground);
+	bool setJump(int& y, int jumps);
+};
+bool Gravity::setGravity(int& y, int ground)
+{
+	if (y <= ground) {
+		y += vfall;
+		tfall += 0.005;
+		vfall = v0fall + gfall * tfall;
+		v0fall = vfall;
+		return false;
+	}
+	else {
+		tfall = 0;
+		y = ground;
+		return true;
+	}
+}
+bool Gravity::setJump(int& y, int jumps)
+{
+	if (y >= jumps) {
+		y -= vjump;
+		tjump += 0.005;
+		vjump = v0jump + gjump * tjump;
+		v0jump = vjump;
+		return false;
+	}
+	else {
+		tjump = 0;
+		y = jumps;
+		return true;
+	}
+}
 class ObjectControl {
 public:
 	ObjectControl();
@@ -36,7 +79,8 @@ public:
 	SDL_Texture* tex;
 	SDL_RendererFlip flip_type;
 	bool is_alive = true;
-	double x_val, y_val, angle;
+	int x_val, y_val;
+	double angle;
 	double gravity;
 	int animSpeed = 5, f = 0, fc = 30;
 };
@@ -147,7 +191,7 @@ public:
 	bool jump_done = false;
 	int weapon_on;
 	int x_pos = 640;
-	int y_pos = 340;
+	int y_pos = 400;
 	int w_val = 60;
 	int h_val = 70;
 	int x_step = 0;
@@ -254,6 +298,7 @@ int main() {
 	const int frameDelay = 1000 / fps;
 	int frameTime;
 	Uint32 frameStart;
+	Gravity g;
 	while (isRunning) {
 		frameStart = SDL_GetTicks();
 		while (SDL_PollEvent(&e)) {
@@ -270,15 +315,23 @@ int main() {
 				}
 			}
 			else if (e.type == SDL_KEYDOWN) {
-				if (e.key.keysym.sym == SDLK_SPACE and player.jump_done) {
+				if (e.key.keysym.sym == SDLK_SPACE) {
 					player.isJumping = true;
 				}
-				if (e.key.keysym.sym == SDLK_w && player.moveL == true) {
-					player.x_step = -3;
+				if (e.key.keysym.sym == SDLK_a and player.moveL == false) {
+					player.x_step = -1;
 					player.isMoving = true;
 				}
-				else if (e.key.keysym.sym == SDLK_w && player.moveR == true) {
-					player.x_step = 3;
+				else if (e.key.keysym.sym == SDLK_a and player.moveL == true) {
+					player.x_step = -6;
+					player.isMoving = true;
+				}
+				else if (e.key.keysym.sym == SDLK_d and player.moveR == true) {
+					player.x_step = 6;
+					player.isMoving = true;
+				}
+				else if (e.key.keysym.sym == SDLK_d and player.moveR == false) {
+					player.x_step = 1;
 					player.isMoving = true;
 				}
 				if (bulletVec.size() >= 30 and e.key.keysym.sym == SDLK_r) {
@@ -286,9 +339,16 @@ int main() {
 				}
 			}
 			if (e.type == SDL_KEYUP) {
-				if (e.key.keysym.sym == SDLK_w) {
+				if (e.key.keysym.sym == SDLK_a) {
 					player.x_step = 0;
 					player.isMoving = false;
+				}
+				else if (e.key.keysym.sym == SDLK_d) {
+					player.x_step = 0;
+					player.isMoving = false;
+				}
+				if (e.key.keysym.sym == SDLK_SPACE) {
+					//player.isJumping = false;
 				}
 			}
 		}
@@ -327,6 +387,17 @@ int main() {
 			//bulletVec.back() += 1;
 			bulletVec[i]->isShooting = false;
 		}
+		if (player.isJumping == true and player.jump_done == false)
+			if (g.setJump(player.rect2.y, 500) == true) player.jump_done = true;
+			else player.jump_done = false;
+		else if (player.jump_done == true)
+			if (g.setGravity(player.rect2.y, 630) == true) {
+				player.isJumping = false;
+				player.jump_done = false;
+			}
+		cout << g.tfall << endl;
+		if (player.rect2.y >= 650) player.rect2.y = 650;
+		hand.rect2.y = player.rect2.y;
 		frameTime = SDL_GetTicks() - frameStart;
 		if (frameDelay > frameTime)
 			SDL_Delay(frameDelay - frameTime);
