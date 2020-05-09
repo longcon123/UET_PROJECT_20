@@ -427,324 +427,349 @@ int main() {
 	SDL_Renderer* render;
 	SDL_Event e;
 	SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, 0, &window, &render);
-	bool game_start = 0;
+	bool game_start = 1;
 	bool isRunning = true;
 	ObjectControl obj;
 	obj.setPos(0, 0);
 	obj.setRect1(0, 0, 900, 600);
 	obj.setRect2(900, 600);
 	obj.setImage("start.png", render);
-	while ()
-		Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-	Mix_Chunk* sound_gun = Mix_LoadWAV("laser1.wav");
-	Mix_Chunk* sound_jump = Mix_LoadWAV("jump.wav");
-	Mix_Chunk* sound_reload = Mix_LoadWAV("reload.wav");
-	Mix_Chunk* sound_lsb = Mix_LoadWAV("lsb_sound.mp3");
-	Mix_Chunk* lsb_active = Mix_LoadWAV("lsb_on.wav");
-	Infor infor;
-	infor.setPos(infor.x, infor.y);
-	infor.setRect1(0, 0, infor.w_val, infor.h_val);
-	infor.setRect2(infor.w_val, infor.h_val);
-	infor.setImage("player_blood.png", render);
-	Blood p_blood;
-	p_blood.setPos(p_blood.x_p, p_blood.y_p);
-	p_blood.setRect1(0, 0, p_blood.w_val_p, p_blood.h_val_p);
-	p_blood.setRect2(p_blood.w_val_p, p_blood.h_val_p);
-	p_blood.setImage("blood.png", render);
-	Enemy enemy;
-	enemy.setPos(enemy.x_pos, enemy.y_pos);
-	enemy.setRect1(0, 0, enemy.w_val, enemy.h_val);
-	enemy.setRect2(enemy.w_val, enemy.h_val);
-	enemy.setImage("enemy.png", render);
-	Blood e_blood;
-	e_blood.setPos(enemy.x_pos - 5, enemy.y_pos - 20);
-	e_blood.setRect1(0, 0, enemy.x_pos, enemy.y_pos);
-	e_blood.setRect2(e_blood.w_val_e, e_blood.h_val_e);
-	e_blood.setImage("enemy_blood.png", render);
-	Player player;
-	player.setPos(player.x_pos, player.y_pos);
-	player.setRect1(0, 0, player.w_val, player.h_val);
-	player.setRect2(player.w_val, player.h_val);
-	player.setImage("nbdj1.png", render);
-	Head head;
-	head.setPos(player.x_pos + 13, player.y_pos - 15);
-	head.setRect1(0, 0, head.w_val, head.h_val);
-	head.setRect2(head.w_val, head.h_val);
-	head.setImage("headnew.png", render);
-	Hand hand;
-	hand.setPos(hand.x_hand, hand.y_hand);
-	hand.setRect1(0, 0, hand.w_val, hand.h_val);
-	hand.setRect2(hand.w_val, hand.h_val);
-	hand.setImage("handnew.png", render);
-	Lsb lsb;
-	lsb.setPos(lsb.x_gun + 50, lsb.y_gun);
-	lsb.setRect1(0, 0, lsb.w_val, lsb.h_val);
-	lsb.setRect2(lsb.w_val, lsb.h_val);
-	lsb.setImage("kiem.png", render);
-	Gun gun;
-	gun.setPos(gun.x_gun + 10, gun.y_gun);
-	gun.setRect1(0, 0, gun.w_val, gun.h_val);
-	gun.setRect2(gun.w_val, gun.h_val);
-	gun.setImage("gun.png", render);
-	vector <Bullet*> bulletVec;
-	//bullet.set_is_move(true);
-	const int fps = 100;
-	const int frameDelay = 1000 / fps;
-	int frameTime;
-	Uint32 frameStart;
-	Map map1, map2;
-	map1.loadLevel(render, 1);
-	map2.loadLevel(render, 2);
-	//int temp;
-	bool ong = true;
-	bool cham_tuong = false;
-	double tjump = 0;
-	int bang_dan = 30;
-	bool cham_t = false;
-	bool duoi = false;
-	int enemy_run_time = 0;
-	bool lv1 = true, lv2 = false;
-	while (isRunning) {
-		frameStart = SDL_GetTicks();
-		SDL_SetRenderDrawColor(render, 155, 100, 100, SDL_ALPHA_OPAQUE);
+	bool play = false;
+	while (game_start) {
+		int x_mouse, y_mouse;
+		SDL_GetMouseState(&x_mouse, &y_mouse);
+		if (0 <= x_mouse && x_mouse <= 555 && 220 <= y_mouse && y_mouse <= 312) {
+			obj.rect1.x = 900;
+		}
+		else obj.rect1.x = 0;
+		obj.draw(render);
 		while (SDL_PollEvent(&e)) {
-			if (e.type == SDL_QUIT) isRunning = false;
+			if (e.type == SDL_QUIT) game_start = false;
 			if (e.type == SDL_MOUSEBUTTONDOWN) {
+				if (e.button.button == SDL_BUTTON_LEFT && 0 <= x_mouse && x_mouse <= 555 && 220 <= y_mouse && y_mouse <= 312) {
+					play = true;
+				}
+			}
+		}
+		if (play) {
+			Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+			Mix_Chunk* sound_gun = Mix_LoadWAV("laser1.wav");
+			Mix_Chunk* sound_jump = Mix_LoadWAV("jump.wav");
+			Mix_Chunk* sound_reload = Mix_LoadWAV("reload.wav");
+			Mix_Chunk* sound_lsb = Mix_LoadWAV("lsb_sound.mp3");
+			Mix_Chunk* lsb_active = Mix_LoadWAV("lsb_on.wav");
+			Infor infor;
+			infor.setPos(infor.x, infor.y);
+			infor.setRect1(0, 0, infor.w_val, infor.h_val);
+			infor.setRect2(infor.w_val, infor.h_val);
+			infor.setImage("player_blood.png", render);
+			Blood p_blood;
+			p_blood.setPos(p_blood.x_p, p_blood.y_p);
+			p_blood.setRect1(0, 0, p_blood.w_val_p, p_blood.h_val_p);
+			p_blood.setRect2(p_blood.w_val_p, p_blood.h_val_p);
+			p_blood.setImage("blood.png", render);
+			Enemy enemy;
+			enemy.setPos(enemy.x_pos, enemy.y_pos);
+			enemy.setRect1(0, 0, enemy.w_val, enemy.h_val);
+			enemy.setRect2(enemy.w_val, enemy.h_val);
+			enemy.setImage("enemy.png", render);
+			Blood e_blood;
+			e_blood.setPos(enemy.x_pos - 5, enemy.y_pos - 20);
+			e_blood.setRect1(0, 0, enemy.x_pos, enemy.y_pos);
+			e_blood.setRect2(e_blood.w_val_e, e_blood.h_val_e);
+			e_blood.setImage("enemy_blood.png", render);
+			Player player;
+			player.setPos(player.x_pos, player.y_pos);
+			player.setRect1(0, 0, player.w_val, player.h_val);
+			player.setRect2(player.w_val, player.h_val);
+			player.setImage("nbdj1.png", render);
+			Head head;
+			head.setPos(player.x_pos + 13, player.y_pos - 15);
+			head.setRect1(0, 0, head.w_val, head.h_val);
+			head.setRect2(head.w_val, head.h_val);
+			head.setImage("headnew.png", render);
+			Hand hand;
+			hand.setPos(hand.x_hand, hand.y_hand);
+			hand.setRect1(0, 0, hand.w_val, hand.h_val);
+			hand.setRect2(hand.w_val, hand.h_val);
+			hand.setImage("handnew.png", render);
+			Lsb lsb;
+			lsb.setPos(lsb.x_gun + 50, lsb.y_gun);
+			lsb.setRect1(0, 0, lsb.w_val, lsb.h_val);
+			lsb.setRect2(lsb.w_val, lsb.h_val);
+			lsb.setImage("kiem.png", render);
+			Gun gun;
+			gun.setPos(gun.x_gun + 10, gun.y_gun);
+			gun.setRect1(0, 0, gun.w_val, gun.h_val);
+			gun.setRect2(gun.w_val, gun.h_val);
+			gun.setImage("gun.png", render);
+			vector <Bullet*> bulletVec;
+			//bullet.set_is_move(true);
+			const int fps = 100;
+			const int frameDelay = 1000 / fps;
+			int frameTime;
+			Uint32 frameStart;
+			Map map1, map2;
+			map1.loadLevel(render, 1);
+			map2.loadLevel(render, 2);
+			player.player_blood = 260;
+			player.weapon_on = 0;
+			enemy.blood = 70;
+			//int temp;
+			bool ong = true;
+			bool cham_tuong = false;
+			double tjump = 0;
+			int bang_dan = 30;
+			bool cham_t = false;
+			bool duoi = false;
+			int enemy_run_time = 0;
+			bool lv1 = true, lv2 = false;
+			while (play) {
+				frameStart = SDL_GetTicks();
+				SDL_SetRenderDrawColor(render, 155, 100, 100, SDL_ALPHA_OPAQUE);
+				while (SDL_PollEvent(&e)) {
+					if (e.type == SDL_QUIT) play = false;
+					if (e.type == SDL_MOUSEBUTTONDOWN) {
+						if (player.get_typeWeapon() == 1) {
+							if (e.button.button == SDL_BUTTON_LEFT and bang_dan > 0) {
+								Bullet* bullet = new Bullet();
+								bullet->setPos(hand.get_x() - 10, hand.get_y() + 5);
+								bullet->setRect1(0, 0, bullet->w_val, bullet->h_val);
+								bullet->setRect2(bullet->w_val, bullet->h_val);
+								bullet->setImage("bullet1.png", render);
+								bullet->isShooting = true;
+								bulletVec.push_back(bullet);
+								bang_dan -= 1;
+								Mix_PlayChannel(-1, sound_gun, 0);
+							}
+							else if (e.button.button == SDL_BUTTON_LEFT and bang_dan == 0) {
+								Mix_PlayChannel(-1, sound_reload, 0);
+							}
+						}
+						else if (player.get_typeWeapon() == 2) {
+							if (e.button.button == SDL_BUTTON_LEFT) {
+								if (lsb.lsb_on == false) {
+									lsb.setSprite(50, 10, 0);
+									Mix_PlayChannel(-1, lsb_active, 0);
+									lsb.lsb_on = true;
+								}
+								else {
+									Mix_PlayChannel(-1, sound_lsb, 0);
+								}
+							}
+						}
+					}
+					if (e.type == SDL_KEYDOWN) {
+						if (e.key.keysym.sym == SDLK_SPACE) {
+							if (ong == true) {
+								ong = false;
+								player.y_step = -5;
+								player.isJumping = true;
+								Mix_PlayChannel(-1, sound_jump, 0);
+								player.rect1.y = 0;
+								player.rect1.x = 31;
+							}
+						}
+						if (e.key.keysym.sym == SDLK_a) {
+							player.x_step = -3;
+							player.isMoving = true;
+						}
+						if (e.key.keysym.sym == SDLK_d) {
+							player.x_step = 3;
+							player.isMoving = true;
+						}
+						if (e.key.keysym.sym == SDLK_r && bang_dan < 30) {
+							Mix_PlayChannel(-1, sound_reload, 0);
+							bulletVec.clear();
+							bang_dan = 30;
+						}
+					}
+					if (e.type == SDL_KEYUP) {
+						if (e.key.keysym.sym == SDLK_a) {
+							player.x_step = 0;
+							player.isMoving = false;
+						}
+						if (e.key.keysym.sym == SDLK_d) {
+							player.x_step = 0;
+							player.isMoving = false;
+						}
+					}
+				}
+				if (lv1) {
+					map1.drawMap(render);
+					if (player.rect2.x < 400)
+						player.rect2.x += player.x_step;
+					if (player.rect2.y >= 600) player.player_blood = 0;
+					for (int i = 0; i < map1.blockVec.size(); i++) {
+						map1.blockVec[i]->rect2.x -= player.x_step;
+						if (obj.checkColli(player.getRect2(), map1.blockVec[i]->getRect2())) {
+							if (player.x_step > 0) {
+								player.rect2.x = map1.blockVec[i]->rect2.x - player.rect2.w; cham_t = true;
+							}
+							if (player.x_step < 0) {
+								player.rect2.x = map1.blockVec[i]->rect2.x + map1.blockVec[i]->rect2.w; cham_t = true;
+							}
+						}
+					}
+					if ((!player.isJumping and !ong) || (!player.isJumping && !cham_tuong)) {
+						player.rect1.x = 0;
+						player.y_step = 10;
+					}
+					else {
+						tjump += 0.05;
+
+					}
+					if (tjump >= 1.5 || cham_tuong || ong) {
+						tjump = 0; player.isJumping = false;
+					}
+					player.rect2.y += player.y_step;
+					for (int i = 0; i < map1.blockVec.size(); i++) {
+						if (obj.checkColli(player.getRect2(), map1.blockVec[i]->getRect2())) {
+							if (map1.blockVec[i]->block_type == 'd') { lv1 = false; lv2 = true; }
+							if (map1.blockVec[i]->block_type == 'w') player.player_blood -= 1;
+							else if (map1.blockVec[i]->block_type == 's') player.player_blood -= 10;
+							if (player.y_step > 0) { player.rect2.y = map1.blockVec[i]->rect2.y - player.rect2.h; player.y_step = 0; cham_tuong = false; ong = true; }
+							if (player.y_step < 0) { player.rect2.y = map1.blockVec[i]->rect2.y + map1.blockVec[i]->rect2.h; cham_tuong = true; ong = false; }
+						}
+					}
+				}
+				if (lv2) {
+					map2.drawMap(render);
+					if (player.rect2.x < 400)
+						player.rect2.x += player.x_step;
+					if (player.rect2.y >= 600) player.player_blood = 0;
+					for (int i = 0; i < map2.blockVec.size(); i++) {
+						map2.blockVec[i]->rect2.x -= player.x_step;
+						if (obj.checkColli(player.getRect2(), map2.blockVec[i]->getRect2())) {
+							if (map2.blockVec[i]->block_type == 'd') { lv2 = false; lv1 = true; }
+							if (player.x_step > 0) {
+								player.rect2.x = map2.blockVec[i]->rect2.x - player.rect2.w; cham_t = true;
+							}
+							if (player.x_step < 0) {
+								player.rect2.x = map2.blockVec[i]->rect2.x + map2.blockVec[i]->rect2.w; cham_t = true;
+							}
+						}
+					}
+					if ((!player.isJumping and !ong) || (!player.isJumping && !cham_tuong)) {
+						player.rect1.x = 0;
+						player.y_step = 10;
+					}
+					else {
+						tjump += 0.05;
+
+					}
+					if (tjump >= 1.5 || cham_tuong || ong) {
+						tjump = 0; player.isJumping = false;
+					}
+					player.rect2.y += player.y_step;
+					for (int i = 0; i < map2.blockVec.size(); i++) {
+						if (obj.checkColli(player.getRect2(), map2.blockVec[i]->getRect2())) {
+							if (map2.blockVec[i]->block_type == 'w') player.player_blood -= 1;
+							else if (map2.blockVec[i]->block_type == 's') player.player_blood -= 10;
+							if (player.y_step > 0) { player.rect2.y = map2.blockVec[i]->rect2.y - player.rect2.h; player.y_step = 0; cham_tuong = false; ong = true; }
+							if (player.y_step < 0) { player.rect2.y = map2.blockVec[i]->rect2.y + map2.blockVec[i]->rect2.h; cham_tuong = true; ong = false; }
+						}
+					}
+				}
+				int x, y;
+				SDL_GetMouseState(&x, &y);
+				if (x >= player.get_x())
+				{
+					player.moveL = false;
+					player.moveR = true;
+				}
+				else
+				{
+					player.moveR = false;
+					player.moveL = true;
+				}
+				player.setFlip(player.moveL, player.moveR);
+				if (player.isMoving) {
+					player.rect1.y = player.Move;
+					player.setSprite(60, 31, 1);
+				}
+				//else player.rect1.y = player.Idle;
+				//if (gun.lsb_on) {
+					//gun.setSprite();
+				//}
+				if (enemy.blood > 0) enemy.draw(render);
+				enemy.rect2.x -= player.x_step;
+
+				enemy_run_time++;
+				if (enemy_run_time >= 80) {
+					enemy.rect2.x -= 3;
+					if (enemy_run_time >= 160) enemy_run_time = 0;
+				}
+				else enemy.rect2.x += 3;
+				if (player.get_typeWeapon() == 0) {
+					if (obj.checkColli(gun.getRect2(), player.getRect2())) {
+						player.weapon_on = 1;
+					}
+					if (obj.checkColli(lsb.getRect2(), player.getRect2())) {
+						player.weapon_on = 2;
+					}
+				}
+				p_blood.rect2.w = player.player_blood;
+				//if (player.player_blood <= 0) { player.is_alive = false; game_start = 1; }
+				e_blood.rect2.w = enemy.blood;
+				infor.draw(render);
+				p_blood.draw(render);
+				e_blood.draw(render);
+				player.draw(render);
+				head.getAngle(x, y);
+				head.setFlip(player.moveL, player.moveR);
+				head.draw_with_angle(render);
+				hand.getAngle(x, y);
+				hand.draw_with_angle(render);
+				//SDL_RenderDrawLine(render, gun.rect2.x, gun.rect2.y, x, y);
 				if (player.get_typeWeapon() == 1) {
-					if (e.button.button == SDL_BUTTON_LEFT and bang_dan > 0) {
-						Bullet* bullet = new Bullet();
-						bullet->setPos(hand.get_x() - 10, hand.get_y() + 5);
-						bullet->setRect1(0, 0, bullet->w_val, bullet->h_val);
-						bullet->setRect2(bullet->w_val, bullet->h_val);
-						bullet->setImage("bullet1.png", render);
-						bullet->isShooting = true;
-						bulletVec.push_back(bullet);
-						bang_dan -= 1;
-						Mix_PlayChannel(-1, sound_gun, 0);
-					}
-					else if (e.button.button == SDL_BUTTON_LEFT and bang_dan == 0) {
-						Mix_PlayChannel(-1, sound_reload, 0);
-					}
-				}
-				else if (player.get_typeWeapon() == 2) {
-					if (e.button.button == SDL_BUTTON_LEFT) {
-						if (lsb.lsb_on == false) {
-							lsb.setSprite(50, 10, 0);
-							Mix_PlayChannel(-1, lsb_active, 0);
-							lsb.lsb_on = true;
+					gun.getAngle(x, y);
+					gun.setFlip(player.moveL, player.moveR);
+					gun.draw_with_angle(render);
+					for (int i = 0; i < bulletVec.size(); ++i) {
+						if (bulletVec[i]->isShooting) {
+							bulletVec[i]->getAngle(x, y);
 						}
-						else {
-							Mix_PlayChannel(-1, sound_lsb, 0);
-						}
+						bulletVec[i]->update();
+						bulletVec[i]->move(bulletVec[i]->new_x, bulletVec[i]->new_y, 1);
+						bulletVec[i]->setFlip(player.moveL, player.moveR);
+						bulletVec[i]->draw_with_angle(render);
+						bulletVec[i]->outScreen();
+						if (obj.checkColli(enemy.getRect2(), bulletVec[i]->getRect2())) enemy.blood -= 1;
+						bulletVec[i]->isShooting = false;
 					}
+					gun.update(player.rect2.x, player.rect2.y - 20);
 				}
+				else {
+					gun.rect2.x -= player.x_step;
+					gun.draw(render);
+				}
+				if (player.get_typeWeapon() == 2) {
+					lsb.getAngle(x, y);
+					lsb.draw_with_angle(render);
+					lsb.update(player.rect2.x, player.rect2.y - 130);
+				}
+				else {
+					lsb.angle = 90;
+					lsb.rect2.x -= player.x_step;
+					lsb.draw_with_angle(render);
+				}
+				if (player.player_blood <= 0) {
+					player.player_blood = 0;
+					player.is_alive = false;
+					play = 0;
+				}
+				e_blood.update(enemy.rect2.x - 5, enemy.rect2.y - 20);
+				hand.update(player.rect2.x, player.rect2.y - 10);
+				head.update(player.rect2.x, player.rect2.y - 20);
+				frameTime = SDL_GetTicks() - frameStart;
+				if (frameDelay > frameTime)
+					SDL_Delay(frameDelay - frameTime);
+				SDL_RenderPresent(render);
+				SDL_RenderClear(render);
 			}
-			if (e.type == SDL_KEYDOWN) {
-				if (e.key.keysym.sym == SDLK_SPACE) {
-					if (ong == true) {
-						ong = false;
-						player.y_step = -5;
-						player.isJumping = true;
-						Mix_PlayChannel(-1, sound_jump, 0);
-						player.rect1.y = 0;
-						player.rect1.x = 31;
-					}
-				}
-				if (e.key.keysym.sym == SDLK_a) {
-					player.x_step = -3;
-					player.isMoving = true;
-				}
-				if (e.key.keysym.sym == SDLK_d) {
-					player.x_step = 3;
-					player.isMoving = true;
-				}
-				if (e.key.keysym.sym == SDLK_r && bang_dan < 30) {
-					Mix_PlayChannel(-1, sound_reload, 0);
-					bulletVec.clear();
-					bang_dan = 30;
-				}
-			}
-			if (e.type == SDL_KEYUP) {
-				if (e.key.keysym.sym == SDLK_a) {
-					player.x_step = 0;
-					player.isMoving = false;
-				}
-				if (e.key.keysym.sym == SDLK_d) {
-					player.x_step = 0;
-					player.isMoving = false;
-				}
-			}
-		}
-		if (lv1) {
-			map1.drawMap(render);
-			if (player.rect2.x < 400)
-				player.rect2.x += player.x_step;
-			if (player.rect2.y >= 600) player.player_blood = 0;
-			for (int i = 0; i < map1.blockVec.size(); i++) {
-				map1.blockVec[i]->rect2.x -= player.x_step;
-				if (obj.checkColli(player.getRect2(), map1.blockVec[i]->getRect2())) {
-					if (player.x_step > 0) {
-						player.rect2.x = map1.blockVec[i]->rect2.x - player.rect2.w; cham_t = true;
-					}
-					if (player.x_step < 0) {
-						player.rect2.x = map1.blockVec[i]->rect2.x + map1.blockVec[i]->rect2.w; cham_t = true;
-					}
-				}
-			}
-			if ((!player.isJumping and !ong) || (!player.isJumping && !cham_tuong)) {
-				player.rect1.x = 0;
-				player.y_step = 10;
-			}
-			else {
-				tjump += 0.05;
 
-			}
-			if (tjump >= 1.5 || cham_tuong || ong) {
-				tjump = 0; player.isJumping = false;
-			}
-			player.rect2.y += player.y_step;
-			for (int i = 0; i < map1.blockVec.size(); i++) {
-				if (obj.checkColli(player.getRect2(), map1.blockVec[i]->getRect2())) {
-					if (map1.blockVec[i]->block_type == 'd') { lv1 = false; lv2 = true; }
-					if (map1.blockVec[i]->block_type == 'w') player.player_blood -= 1;
-					else if (map1.blockVec[i]->block_type == 's') player.player_blood -= 10;
-					if (player.y_step > 0) { player.rect2.y = map1.blockVec[i]->rect2.y - player.rect2.h; player.y_step = 0; cham_tuong = false; ong = true; }
-					if (player.y_step < 0) { player.rect2.y = map1.blockVec[i]->rect2.y + map1.blockVec[i]->rect2.h; cham_tuong = true; ong = false; }
-				}
-			}
 		}
-		if (lv2) {
-			map2.drawMap(render);
-			if (player.rect2.x < 400)
-				player.rect2.x += player.x_step;
-			if (player.rect2.y >= 600) player.player_blood = 0;
-			for (int i = 0; i < map2.blockVec.size(); i++) {
-				map2.blockVec[i]->rect2.x -= player.x_step;
-				if (obj.checkColli(player.getRect2(), map2.blockVec[i]->getRect2())) {
-					if (map2.blockVec[i]->block_type == 'd') { lv2 = false; lv1 = true; }
-					if (player.x_step > 0) {
-						player.rect2.x = map2.blockVec[i]->rect2.x - player.rect2.w; cham_t = true;
-					}
-					if (player.x_step < 0) {
-						player.rect2.x = map2.blockVec[i]->rect2.x + map2.blockVec[i]->rect2.w; cham_t = true;
-					}
-				}
-			}
-			if ((!player.isJumping and !ong) || (!player.isJumping && !cham_tuong)) {
-				player.rect1.x = 0;
-				player.y_step = 10;
-			}
-			else {
-				tjump += 0.05;
-
-			}
-			if (tjump >= 1.5 || cham_tuong || ong) {
-				tjump = 0; player.isJumping = false;
-			}
-			player.rect2.y += player.y_step;
-			for (int i = 0; i < map2.blockVec.size(); i++) {
-				if (obj.checkColli(player.getRect2(), map2.blockVec[i]->getRect2())) {
-					if (map2.blockVec[i]->block_type == 'w') player.player_blood -= 1;
-					else if (map2.blockVec[i]->block_type == 's') player.player_blood -= 10;
-					if (player.y_step > 0) { player.rect2.y = map2.blockVec[i]->rect2.y - player.rect2.h; player.y_step = 0; cham_tuong = false; ong = true; }
-					if (player.y_step < 0) { player.rect2.y = map2.blockVec[i]->rect2.y + map2.blockVec[i]->rect2.h; cham_tuong = true; ong = false; }
-				}
-			}
-		}
-		int x, y;
-		SDL_GetMouseState(&x, &y);
-		if (x >= player.get_x())
-		{
-			player.moveL = false;
-			player.moveR = true;
-		}
-		else
-		{
-			player.moveR = false;
-			player.moveL = true;
-		}
-		player.setFlip(player.moveL, player.moveR);
-		if (player.isMoving) {
-			player.rect1.y = player.Move;
-			player.setSprite(60, 31, 1);
-		}
-		//else player.rect1.y = player.Idle;
-		//if (gun.lsb_on) {
-			//gun.setSprite();
-		//}
-		if (enemy.blood > 0) enemy.draw(render);
-		enemy.rect2.x -= player.x_step;
-
-		enemy_run_time++;
-		if (enemy_run_time >= 80) {
-			enemy.rect2.x -= 3;
-			if (enemy_run_time >= 160) enemy_run_time = 0;
-		}
-		else enemy.rect2.x += 3;
-		if (player.get_typeWeapon() == 0) {
-			if (obj.checkColli(gun.getRect2(), player.getRect2())) {
-				player.weapon_on = 1;
-			}
-			if (obj.checkColli(lsb.getRect2(), player.getRect2())) {
-				player.weapon_on = 2;
-			}
-		}
-		p_blood.rect2.w = player.player_blood;
-		//if (player.player_blood <= 0) { player.is_alive = false; game_start = 1; }
-		e_blood.rect2.w = enemy.blood;
-		infor.draw(render);
-		p_blood.draw(render);
-		e_blood.draw(render);
-		player.draw(render);
-		head.getAngle(x, y);
-		head.setFlip(player.moveL, player.moveR);
-		head.draw_with_angle(render);
-		hand.getAngle(x, y);
-		hand.draw_with_angle(render);
-		//SDL_RenderDrawLine(render, gun.rect2.x, gun.rect2.y, x, y);
-		if (player.get_typeWeapon() == 1) {
-			gun.getAngle(x, y);
-			gun.setFlip(player.moveL, player.moveR);
-			gun.draw_with_angle(render);
-			for (int i = 0; i < bulletVec.size(); ++i) {
-				if (bulletVec[i]->isShooting) {
-					bulletVec[i]->getAngle(x, y);
-				}
-				bulletVec[i]->update();
-				bulletVec[i]->move(bulletVec[i]->new_x, bulletVec[i]->new_y, 1);
-				bulletVec[i]->setFlip(player.moveL, player.moveR);
-				bulletVec[i]->draw_with_angle(render);
-				bulletVec[i]->outScreen();
-				if (obj.checkColli(enemy.getRect2(), bulletVec[i]->getRect2())) enemy.blood -= 1;
-				bulletVec[i]->isShooting = false;
-			}
-			gun.update(player.rect2.x, player.rect2.y - 20);
-		}
-		else {
-			gun.rect2.x -= player.x_step;
-			gun.draw(render);
-		}
-		if (player.get_typeWeapon() == 2) {
-			lsb.getAngle(x, y);
-			lsb.draw_with_angle(render);
-			lsb.update(player.rect2.x, player.rect2.y - 130);
-		}
-		else {
-			lsb.angle = 90;
-			lsb.rect2.x -= player.x_step;
-			lsb.draw_with_angle(render);
-		}
-		if (player.player_blood <= 0) {
-			player.player_blood = 0;
-			player.is_alive = false;
-			game_start = 0;
-		}
-		e_blood.update(enemy.rect2.x - 5, enemy.rect2.y - 20);
-		hand.update(player.rect2.x, player.rect2.y - 10);
-		head.update(player.rect2.x, player.rect2.y - 20);
-		frameTime = SDL_GetTicks() - frameStart;
-		if (frameDelay > frameTime)
-			SDL_Delay(frameDelay - frameTime);
 		SDL_RenderPresent(render);
 		SDL_RenderClear(render);
 	}
