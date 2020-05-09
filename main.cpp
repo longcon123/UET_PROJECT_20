@@ -1,425 +1,19 @@
 #define SDL_MAIN_HANDLED
-#include <iostream>
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_mixer.h>
-#include <cstring>
-#include <vector>
-#include <cmath>
+#include "ObjectControl.h"
+#include "player.h"
+#include "head.h"
+#include "hand.h"
+#include "map.h"
+#include "block.h"
+#include "gun.h"
+#include "bullet.h"
+#include "lsb.h"
+#include "infor.h"
+#include "blood.h"
+#include "enemy.h"
+
 const int WIDTH = 800;
 const int HEIGHT = 600;
-const double PI = 3.14159265;
-using namespace std;
-class ObjectControl {
-public:
-	ObjectControl();
-	~ObjectControl();
-	void setImage(string filename, SDL_Renderer* ren);
-	void setPos(int x, int y);
-	void setRect1(int x, int y, int w, int h);
-	void setRect2(int w, int h);
-	void setFlip(bool left, bool right);
-	void draw(SDL_Renderer* ren);
-	void draw_with_angle(SDL_Renderer* ren);
-	void setSprite(int x_max, int x_step, bool rv);
-	void move(int new_x, int new_y, int speed);
-	void getAngle(int x_mouse, int y_mouse);
-	void update(int x_pos, int y_pos);
-	int get_x() { return rect2.x; }
-	int get_y() { return rect2.y; }
-	void outScreen();
-	//void setGravity()
-	bool checkColli(SDL_Rect rectofA, SDL_Rect rectofB);
-	//double getGravity() { return gravity; }
-	SDL_Rect getRect1() { return rect1; }
-	SDL_Rect getRect2() { return rect2; }
-	SDL_Texture* getTex() { return tex; };
-	SDL_Rect rect1;
-	SDL_Rect rect2;
-	SDL_Texture* tex;
-	SDL_RendererFlip flip_type;
-	bool is_alive = true;
-	int x_val;
-	int y_val;
-	double angle;
-	double gravity;
-	int animSpeed = 3, f = 0, fc = 30;
-};
-ObjectControl::ObjectControl() {
-
-}
-ObjectControl::~ObjectControl() {
-	SDL_DestroyTexture(tex);
-}
-void ObjectControl::move(int new_x, int new_y, int speed) {
-	rect2.x += new_x * speed;
-	rect2.y += new_y * speed;
-}
-void ObjectControl::setPos(int _x, int _y) {
-	x_val = _x;
-	y_val = _y;
-}
-void ObjectControl::update(int x_pos, int y_pos) {
-	rect2.x = x_pos;
-	rect2.y = y_pos;
-}
-void ObjectControl::setFlip(bool left, bool right) {
-	if (left == true && right == false) flip_type = SDL_FLIP_HORIZONTAL;
-	else if (left == false && right == true) flip_type = SDL_FLIP_NONE;
-}
-void ObjectControl::setImage(string filename, SDL_Renderer* ren) {
-	SDL_Surface* sur = IMG_Load(filename.c_str());
-	tex = SDL_CreateTextureFromSurface(ren, sur);
-}
-void ObjectControl::setRect1(int x, int y, int w, int h) {
-	rect1.x = x;
-	rect1.y = y;
-	rect1.w = w;
-	rect1.h = h;
-}
-void ObjectControl::setRect2(int w, int h) {
-	rect2.x = x_val;
-	rect2.y = y_val;
-	rect2.w = w;
-	rect2.h = h;
-}
-void ObjectControl::setSprite(int x_max, int x_step, bool rv) {
-	if (rect1.x >= x_max) {
-		if (rv) rect1.x = 0;
-		else rect1.x = x_max;
-	}
-	else {
-		f += animSpeed;
-		if (f > fc) {
-			f -= fc;
-			rect1.x += x_step;
-		}
-	}
-}
-void ObjectControl::draw(SDL_Renderer* ren) {
-	SDL_RenderCopyEx(ren, getTex(), &rect1, &rect2, 0, NULL, flip_type);
-
-}
-void ObjectControl::draw_with_angle(SDL_Renderer* ren) {
-	SDL_RenderCopyEx(ren, getTex(), &rect1, &rect2, angle, NULL, flip_type);
-}
-void ObjectControl::getAngle(int x_mouse, int y_mouse) {
-	int xc = rect2.x + rect2.w / 2;
-	double param = (y_mouse - rect2.y) / sqrt((x_mouse - xc) * (x_mouse - xc) + (y_mouse - rect2.y) * (y_mouse - rect2.y));
-	double angleHand = acos(param) * 180.0 / PI;
-	if (rect2.x > x_mouse) angleHand += 180;
-	else angleHand = 180 - angleHand;
-	angle = angleHand;
-}
-bool ObjectControl::checkColli(SDL_Rect rectS2ofA, SDL_Rect rectS2ofB) {
-	if (rectS2ofA.x + rectS2ofA.w > rectS2ofB.x &&
-		rectS2ofB.x + rectS2ofB.w > rectS2ofA.x &&
-		rectS2ofA.y + rectS2ofA.h > rectS2ofB.y &&
-		rectS2ofB.h + rectS2ofB.y > rectS2ofA.y)
-		return true;
-	return false;
-}
-void ObjectControl::outScreen() {
-	if (rect2.x > 1280 or rect2.x < 0 or rect2.y > 1020 or rect2.y < 0)
-		is_alive = false;
-}
-class Player : public ObjectControl
-{
-public:
-	Player();
-	~Player();
-	int get_typeWeapon() { return weapon_on; };
-	bool moveL = false;
-	bool moveR = true;
-	bool isMoving = false;
-	bool isJumping = false;
-	bool jump_done = false;
-	int weapon_on;
-	int x_pos = 300;
-	int y_pos = 100;
-	int w_val = 32;
-	int h_val = 84;
-	int x_step = 0;
-	int y_step = 0;
-	int jump_step = 10;
-	int speed = 1;
-	const int Move = 90;
-	const int Idle = 0;
-	const int Jump = 0;
-	double player_blood = 260;
-};
-Player::Player()
-{
-
-}
-Player::~Player()
-{
-
-}
-
-class Enemy : public ObjectControl
-{
-public:
-	Enemy();
-	~Enemy();
-	bool moveL = false;
-	bool moveR = true;
-	int x_pos = 2400;
-	int y_pos = 510;
-	int w_val = 60;
-	int h_val = 60;
-	int x_step = 10;
-	int y_step = 0;
-	int speed = 1;
-	int blood = 70;
-	bool isAlive = true;
-};
-Enemy::Enemy()
-{
-
-}
-Enemy::~Enemy()
-{
-
-}
-
-
-class Hand : public ObjectControl
-{
-public:
-	Player player;
-	int x_hand = player.x_pos;
-	int y_hand = player.y_pos + 50;
-	int w_val = 14;
-	int h_val = 70;
-};
-
-class Head : public ObjectControl
-{
-public:
-	Player player;
-	int x_head = player.x_pos;
-	int y_head = player.y_pos;
-	int w_val = 32;
-	int h_val = 26;
-};
-
-class Gun : public ObjectControl
-{
-public:
-	Player player;
-	int x_gun = 350;
-	int y_gun = 330;
-	int w_val = 25;
-	int h_val = 80;
-};
-class Lsb : public ObjectControl
-{
-public:
-	Player player;
-	int x_gun = 20;
-	int y_gun = 90;
-	int w_val = 10;
-	int h_val = 300;
-	bool lsb_on = false;
-};
-
-
-
-
-class Bullet : public ObjectControl
-{
-public:
-	Bullet();
-	~Bullet();
-	Gun gun;
-	bool isMove() const { return isShooting; }
-	void set_is_move(bool isMove) { isShooting = isMove; }
-	void update();
-	int x_val = gun.x_val + 10;
-	int y_val = gun.y_val - 5;
-	int w_val = 5;
-	int h_val = 30;
-	int bullet_type1 = 50;
-	int bullet_type2 = 100;
-	int bullet_type3 = 150;
-	bool isShooting;
-	int speed = 1;
-	double new_x, new_y;
-private:
-	const double DEGTORAD = 0.017453;
-};
-Bullet::Bullet()
-{
-}
-Bullet::~Bullet()
-{
-}
-void Bullet::update() {
-	new_x += sin(angle * DEGTORAD) * 20.0f;
-	new_y += -cos(angle * DEGTORAD) * 20.0f;
-	/*int maxSpeed = 15;
-	double speed = sqrt(new_x * new_x + new_y * new_y);
-	if (speed > maxSpeed) {
-		new_x *= maxSpeed / speed;
-		new_y *= maxSpeed / speed;
-	}*/
-}
-class Block : public ObjectControl {
-public:
-	Block() { ; }
-	~Block() { ; }
-	int w_val = 40;
-	int h_val = 30;
-	const string grass = "grass.png";
-	const string brick = "brick.png";
-	const string water = "water.png";
-	const string gai = "gai.png";
-	const string door = "door.png";
-	int max_w = 20;
-	int max_h = 80;
-	char block_type;
-};
-
-class Infor : public ObjectControl {
-public:
-	Infor() { ; }
-	~Infor() { ; }
-	int w_val = 370;
-	int h_val = 114;
-	int x = 0;
-	int y = 0;
-
-};
-class Blood : public ObjectControl {
-public:
-	Blood() { ; }
-	~Blood() { ; }
-	int w_val_p = 270;
-	int h_val_p = 21;
-	const int x_p = 98;
-	const int y_p = 32;
-	int w_val_e = 70;
-	int h_val_e = 10;
-
-};
-
-class Map {
-public:
-	Map() { ; }
-	~Map() { ; }
-	Block block_ref;
-	void loadLevel(SDL_Renderer* render, int lv);
-	void drawMap(SDL_Renderer* render);
-	vector<Block*> blockVec;
-private:
-	int lv1[20][80]{
-		{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,2,0,0,2,0,0,2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,0,0,0,2,0,0,2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,2,0,0,2,0,0,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,1,2,2,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,2,2,1,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,1,2,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0},
-		{2,2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0},
-		{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,3,1,3,3,3,3,3,1,3,3,3,3,3,3,3,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0},
-	};
-	int lv2[20][80]{
-		{0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,2,2,2,5,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,2,0,2,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,4,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,2,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2,0,0,2,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,2,2,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-		{1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0},
-	};
-};
-void Map::loadLevel(SDL_Renderer* render, int lv) {
-	int brick_type;
-
-	for (int i = 0; i < block_ref.max_w; i++) {
-		for (int j = 0; j < block_ref.max_h; j++) {
-			if (lv == 1) brick_type = lv1[i][j];
-			else if (lv == 2) brick_type = lv2[i][j];
-			if (brick_type != 0) {
-				Block* block = new Block();
-				block->rect2.x = j * 40;
-				block->rect2.y = i * 30;
-				switch (brick_type)
-				{
-				case 1:
-					block->setPos(block->rect2.x, block->rect2.y);
-					block->setRect1(0, 0, block->w_val, block->h_val);
-					block->setRect2(block->w_val, block->h_val);
-					block->setImage(block->grass, render);
-					block->block_type = 'g';
-					break;
-				case 2:
-					block->setPos(block->rect2.x, block->rect2.y);
-					block->setRect1(0, 0, block->w_val, block->h_val);
-					block->setRect2(block->w_val, block->h_val);
-					block->setImage(block->brick, render);
-					block->block_type = 'b';
-					break;
-				case 3:
-					block->setPos(block->rect2.x, block->rect2.y);
-					block->setRect1(0, 0, block->w_val, block->h_val);
-					block->setRect2(block->w_val, block->h_val);
-					block->setImage(block->water, render);
-					block->block_type = 'w';
-					break;
-				case 4:
-					block->setPos(block->rect2.x, block->rect2.y);
-					block->setRect1(0, 0, block->w_val, block->h_val);
-					block->setRect2(block->w_val, block->h_val);
-					block->setImage(block->gai, render);
-					block->block_type = 's';
-					break;
-				case 5:
-					block->setPos(block->rect2.x, block->rect2.y);
-					block->setRect1(0, 0, block->w_val, block->h_val);
-					block->setRect2(block->w_val, block->h_val);
-					block->setImage(block->door, render);
-					block->block_type = 'd';
-					break;
-				default:
-					break;
-				}
-				blockVec.push_back(block);
-			}
-		}
-	}
-}
-void Map::drawMap(SDL_Renderer* render) {
-	if (blockVec.size() > 0)
-		for (int i = 0; i < blockVec.size(); i++)
-			blockVec[i]->draw(render);
-}
-
 
 int main() {
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -595,44 +189,51 @@ int main() {
 						}
 					}
 				}
+				// ---- kiem tra dang o lv 1
 				if (lv1) {
-					map1.drawMap(render);
+					map1.drawMap(render); // ve ma[
 					if (player.rect2.x < 400)
-						player.rect2.x += player.x_step;
-					if (player.rect2.y >= 600) player.player_blood = 0;
+						player.rect2.x += player.x_step; // nhan vat di chuyen den giua man hinh thi khong di, chi co camera move
+					if (player.rect2.y >= 600) player.player_blood = 0; // neu roi xuong khoi game thi thua luon
+
+					// kiem tra va cham theo huong cua x axis cua nhan vat voi block map
 					for (int i = 0; i < map1.blockVec.size(); i++) {
-						map1.blockVec[i]->rect2.x -= player.x_step;
-						if (obj.checkColli(player.getRect2(), map1.blockVec[i]->getRect2())) {
-							if (player.x_step > 0) {
-								player.rect2.x = map1.blockVec[i]->rect2.x - player.rect2.w; cham_t = true;
+						map1.blockVec[i]->rect2.x -= player.x_step; // di chuyen camera theo nhan vat, tat ca object di chuyen nguoc lai
+						if (obj.checkColli(player.getRect2(), map1.blockVec[i]->getRect2())) {// neu va cham
+
+							if (player.x_step > 0) { // new xstep > 0 => nhan vat dang tien thi se k cho tien nua
+								player.rect2.x = map1.blockVec[i]->rect2.x - player.rect2.w; cham_t = true; // khong cho tien
 							}
-							if (player.x_step < 0) {
-								player.rect2.x = map1.blockVec[i]->rect2.x + map1.blockVec[i]->rect2.w; cham_t = true;
+							if (player.x_step < 0) {// new xstep < 0 => nhan vat dang tien thi se k cho lui` nua
+								player.rect2.x = map1.blockVec[i]->rect2.x + map1.blockVec[i]->rect2.w; cham_t = true; //ko chu lui`
 							}
 						}
 					}
-					if ((!player.isJumping and !ong) || (!player.isJumping && !cham_tuong)) {
-						player.rect1.x = 0;
-						player.y_step = 10;
+					// kiem tra va cham theo axis y cua nhan vat voi block map
+					if ((!player.isJumping and !ong) || (!player.isJumping && !cham_tuong)) { // neu ma ko nhay va khong cham tuong suy ra player roi xuong
+						player.rect1.x = 0; // animation fall
+						player.y_step = 10; // roi xuong
 					}
 					else {
-						tjump += 0.05;
+						tjump += 0.05; // neu ma nhay len thi set thoi gian nhay tjump += 0.05 
 
 					}
-					if (tjump >= 1.5 || cham_tuong || ong) {
+					if (tjump >= 1.5 || cham_tuong || ong) { // neu ma da nhay len dc >= 1.5 thi set time = 0; roi xuong
 						tjump = 0; player.isJumping = false;
 					}
-					player.rect2.y += player.y_step;
+					player.rect2.y += player.y_step; // cong vi tri y nhan vat voi step
 					for (int i = 0; i < map1.blockVec.size(); i++) {
 						if (obj.checkColli(player.getRect2(), map1.blockVec[i]->getRect2())) {
-							if (map1.blockVec[i]->block_type == 'd') { lv1 = false; lv2 = true; }
-							if (map1.blockVec[i]->block_type == 'w') player.player_blood -= 1;
-							else if (map1.blockVec[i]->block_type == 's') player.player_blood -= 10;
-							if (player.y_step > 0) { player.rect2.y = map1.blockVec[i]->rect2.y - player.rect2.h; player.y_step = 0; cham_tuong = false; ong = true; }
-							if (player.y_step < 0) { player.rect2.y = map1.blockVec[i]->rect2.y + map1.blockVec[i]->rect2.h; cham_tuong = true; ong = false; }
+							if (map1.blockVec[i]->block_type == 'd') { lv1 = false; lv2 = true; } // kiem tra va cham voi block door thi chuyen map level
+							if (map1.blockVec[i]->block_type == 'w') player.player_blood -= 1; // kiem tra va cham block water thi tru mau'
+							else if (map1.blockVec[i]->block_type == 's') player.player_blood -= 10; // kiem tra va cham block gai thi tru mau nhieu hon
+							if (player.y_step > 0) { player.rect2.y = map1.blockVec[i]->rect2.y - player.rect2.h; player.y_step = 0; cham_tuong = false; ong = true; }  // khi roi xuong va gap block thi k xuong duoc nua
+							if (player.y_step < 0) { player.rect2.y = map1.blockVec[i]->rect2.y + map1.blockVec[i]->rect2.h; cham_tuong = true; ong = false; } // khi nhay len ma gap block thi roi xuong
 						}
 					}
 				}
+				// -------------
+				//kiem tra dang o lv2 
 				if (lv2) {
 					map2.drawMap(render);
 					if (player.rect2.x < 400)
@@ -671,6 +272,10 @@ int main() {
 						}
 					}
 				}
+				//-------------------------------------------------------------------------------------------------------------------------------------
+
+				// lay vi tri chuot neu x player < x chuot set flip horizontal = true
+				//------------------------------------------
 				int x, y;
 				SDL_GetMouseState(&x, &y);
 				if (x >= player.get_x())
@@ -684,6 +289,8 @@ int main() {
 					player.moveL = true;
 				}
 				player.setFlip(player.moveL, player.moveR);
+				//-------------------------------------------
+				//neu di chuyen thi spite
 				if (player.isMoving) {
 					player.rect1.y = player.Move;
 					player.setSprite(60, 31, 1);
@@ -693,14 +300,21 @@ int main() {
 					//gun.setSprite();
 				//}
 				if (enemy.blood > 0) enemy.draw(render);
-				enemy.rect2.x -= player.x_step;
 
+				//cho enemy di chuyen nguoc voi camera
+				enemy.rect2.x -= player.x_step;
+				//
+
+				//cho enemy di lai 
 				enemy_run_time++;
 				if (enemy_run_time >= 80) {
 					enemy.rect2.x -= 3;
 					if (enemy_run_time >= 160) enemy_run_time = 0;
 				}
 				else enemy.rect2.x += 3;
+				// enemy di lai
+
+				//kiem tra nhat vu khi va set type weapon cho player
 				if (player.get_typeWeapon() == 0) {
 					if (obj.checkColli(gun.getRect2(), player.getRect2())) {
 						player.weapon_on = 1;
@@ -709,19 +323,23 @@ int main() {
 						player.weapon_on = 2;
 					}
 				}
+				//
+
+				// update blood cho enemy va player
 				p_blood.rect2.w = player.player_blood;
-				//if (player.player_blood <= 0) { player.is_alive = false; game_start = 1; }
 				e_blood.rect2.w = enemy.blood;
-				infor.draw(render);
-				p_blood.draw(render);
-				e_blood.draw(render);
-				player.draw(render);
+				// update blood cho enemy va player
+
+
+				// lay goc va ve cho head va hand theo mouse x y
 				head.getAngle(x, y);
 				head.setFlip(player.moveL, player.moveR);
 				head.draw_with_angle(render);
 				hand.getAngle(x, y);
 				hand.draw_with_angle(render);
-				//SDL_RenderDrawLine(render, gun.rect2.x, gun.rect2.y, x, y);
+				// lay goc va ve cho head va hand theo mouse x y
+
+				// kiem tra xem nhat vu khi gi
 				if (player.get_typeWeapon() == 1) {
 					gun.getAngle(x, y);
 					gun.setFlip(player.moveL, player.moveR);
@@ -758,13 +376,24 @@ int main() {
 					player.player_blood = 0;
 					player.is_alive = false;
 					play = 0;
-				}
+				} // kiem tra xem nhat vu khi gi, khong nhat thi update vitri moi
+
+				// ve va update vi tri
+				infor.draw(render);
+				p_blood.draw(render);
+				e_blood.draw(render);
+				player.draw(render);
 				e_blood.update(enemy.rect2.x - 5, enemy.rect2.y - 20);
 				hand.update(player.rect2.x, player.rect2.y - 10);
 				head.update(player.rect2.x, player.rect2.y - 20);
+				//	
+
+				// gioi han fps
 				frameTime = SDL_GetTicks() - frameStart;
 				if (frameDelay > frameTime)
 					SDL_Delay(frameDelay - frameTime);
+				// gioi han fps
+
 				SDL_RenderPresent(render);
 				SDL_RenderClear(render);
 			}
