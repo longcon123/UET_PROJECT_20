@@ -11,6 +11,7 @@
 #include "infor.h"
 #include "blood.h"
 #include "enemy.h"
+#include "sound.h"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -52,11 +53,17 @@ int main() {
 			Mix_Chunk* sound_reload = Mix_LoadWAV("reload.wav");
 			Mix_Chunk* sound_lsb = Mix_LoadWAV("lsb_sound.mp3");
 			Mix_Chunk* lsb_active = Mix_LoadWAV("lsb_on.wav");
+			Mix_Music* back_ground = Mix_LoadMUS("Merry Go.mp3");
 			Infor infor;
 			infor.setPos(infor.x, infor.y);
 			infor.setRect1(0, 0, infor.w_val, infor.h_val);
 			infor.setRect2(infor.w_val, infor.h_val);
 			infor.setImage("player_blood.png", render);
+			Sound sound;
+			sound.setPos(sound.x, sound.y);
+			sound.setRect1(0, 0, sound.w_val, sound.h_val);
+			sound.setRect2(sound.w_val, sound.h_val);
+			sound.setImage("sound_be.png", render);
 			Blood p_blood;
 			p_blood.setPos(p_blood.x_p, p_blood.y_p);
 			p_blood.setRect1(0, 0, p_blood.w_val_p, p_blood.h_val_p);
@@ -118,37 +125,58 @@ int main() {
 			bool duoi = false;
 			int enemy_run_time = 0;
 			bool lv1 = true, lv2 = false;
+			bool mute = false;
+			Mix_PlayMusic(back_ground, -1);
 			while (play) {
 				frameStart = SDL_GetTicks();
+
+				int x, y;
+				SDL_GetMouseState(&x, &y);
 				SDL_SetRenderDrawColor(render, 155, 100, 100, SDL_ALPHA_OPAQUE);
+				cout << sound.volumn << endl;
 				while (SDL_PollEvent(&e)) {
 					if (e.type == SDL_QUIT) play = false;
 					if (e.type == SDL_MOUSEBUTTONDOWN) {
-						if (player.get_typeWeapon() == 1) {
-							if (e.button.button == SDL_BUTTON_LEFT and bang_dan > 0) {
-								Bullet* bullet = new Bullet();
-								bullet->setPos(hand.get_x() - 10, hand.get_y() + 5);
-								bullet->setRect1(0, 0, bullet->w_val, bullet->h_val);
-								bullet->setRect2(bullet->w_val, bullet->h_val);
-								bullet->setImage("bullet1.png", render);
-								bullet->isShooting = true;
-								bulletVec.push_back(bullet);
-								bang_dan -= 1;
-								Mix_PlayChannel(-1, sound_gun, 0);
-							}
-							else if (e.button.button == SDL_BUTTON_LEFT and bang_dan == 0) {
-								Mix_PlayChannel(-1, sound_reload, 0);
-							}
-						}
-						else if (player.get_typeWeapon() == 2) {
+						if (sound.x <= x && x <= sound.x + sound.w_val && sound.y <= y && y <= sound.y + sound.h_val) {
 							if (e.button.button == SDL_BUTTON_LEFT) {
-								if (lsb.lsb_on == false) {
-									lsb.setSprite(50, 10, 0);
-									Mix_PlayChannel(-1, lsb_active, 0);
-									lsb.lsb_on = true;
+								if (!(sound.rect2.w < 30) and !mute) {
+									sound.update_volumn(mute);
 								}
-								else {
-									Mix_PlayChannel(-1, sound_lsb, 0);
+								else mute = true;
+								if (!(sound.rect2.w > 60) and mute) {
+									sound.update_volumn(mute);
+								}
+								else mute = false;
+							}
+							Mix_VolumeMusic(sound.volumn);
+						}
+						else {
+							if (player.get_typeWeapon() == 1) {
+								if (e.button.button == SDL_BUTTON_LEFT and bang_dan > 0) {
+									Bullet* bullet = new Bullet();
+									bullet->setPos(hand.get_x() - 10, hand.get_y() + 5);
+									bullet->setRect1(0, 0, bullet->w_val, bullet->h_val);
+									bullet->setRect2(bullet->w_val, bullet->h_val);
+									bullet->setImage("bullet1.png", render);
+									bullet->isShooting = true;
+									bulletVec.push_back(bullet);
+									bang_dan -= 1;
+									Mix_PlayChannel(-1, sound_gun, 0);
+								}
+								else if (e.button.button == SDL_BUTTON_LEFT and bang_dan == 0) {
+									Mix_PlayChannel(-1, sound_reload, 0);
+								}
+							}
+							else if (player.get_typeWeapon() == 2) {
+								if (e.button.button == SDL_BUTTON_LEFT) {
+									if (lsb.lsb_on == false) {
+										lsb.setSprite(50, 10, 0);
+										Mix_PlayChannel(-1, lsb_active, 0);
+										lsb.lsb_on = true;
+									}
+									else {
+										Mix_PlayChannel(-1, sound_lsb, 0);
+									}
 								}
 							}
 						}
@@ -189,13 +217,11 @@ int main() {
 						}
 					}
 				}
+				if (player.rect2.y >= 600) player.player_blood = 0; // neu roi xuong khoi game thi thua luon
+				if (player.rect2.x < 400) player.rect2.x += player.x_step; // nhan vat di chuyen den giua man hinh thi khong di, chi co camera move
 				// ---- kiem tra dang o lv 1
 				if (lv1) {
-					map1.drawMap(render); // ve ma[
-					if (player.rect2.x < 400)
-						player.rect2.x += player.x_step; // nhan vat di chuyen den giua man hinh thi khong di, chi co camera move
-					if (player.rect2.y >= 600) player.player_blood = 0; // neu roi xuong khoi game thi thua luon
-
+					map1.drawMap(render); // ve map
 					// kiem tra va cham theo huong cua x axis cua nhan vat voi block map
 					for (int i = 0; i < map1.blockVec.size(); i++) {
 						map1.blockVec[i]->rect2.x -= player.x_step; // di chuyen camera theo nhan vat, tat ca object di chuyen nguoc lai
@@ -236,9 +262,6 @@ int main() {
 				//kiem tra dang o lv2 
 				if (lv2) {
 					map2.drawMap(render);
-					if (player.rect2.x < 400)
-						player.rect2.x += player.x_step;
-					if (player.rect2.y >= 600) player.player_blood = 0;
 					for (int i = 0; i < map2.blockVec.size(); i++) {
 						map2.blockVec[i]->rect2.x -= player.x_step;
 						if (obj.checkColli(player.getRect2(), map2.blockVec[i]->getRect2())) {
@@ -276,8 +299,7 @@ int main() {
 
 				// lay vi tri chuot neu x player < x chuot set flip horizontal = true
 				//------------------------------------------
-				int x, y;
-				SDL_GetMouseState(&x, &y);
+
 				if (x >= player.get_x())
 				{
 					player.moveL = false;
@@ -353,7 +375,7 @@ int main() {
 						bulletVec[i]->setFlip(player.moveL, player.moveR);
 						bulletVec[i]->draw_with_angle(render);
 						bulletVec[i]->outScreen();
-						if (obj.checkColli(enemy.getRect2(), bulletVec[i]->getRect2())) enemy.blood -= 1;
+						if (obj.checkColli(enemy.getRect2(), bulletVec[i]->getRect2())) enemy.blood -= 10;
 						bulletVec[i]->isShooting = false;
 					}
 					gun.update(player.rect2.x, player.rect2.y - 20);
@@ -379,6 +401,7 @@ int main() {
 				} // kiem tra xem nhat vu khi gi, khong nhat thi update vitri moi
 
 				// ve va update vi tri
+				sound.draw(render);
 				infor.draw(render);
 				p_blood.draw(render);
 				e_blood.draw(render);
