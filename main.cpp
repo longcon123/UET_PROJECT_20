@@ -1,3 +1,4 @@
+//code them va cham nhan vat voi enemy, code them bo vu khi, code them victory win;
 #define SDL_MAIN_HANDLED
 #include "ObjectControl.h"
 #include "player.h"
@@ -13,7 +14,7 @@
 #include "enemy.h"
 #include "sound.h"
 
-const int WIDTH = 800;
+const int WIDTH = 900;
 const int HEIGHT = 600;
 
 int main() {
@@ -28,15 +29,17 @@ int main() {
 	obj.setPos(0, 0);
 	obj.setRect1(0, 0, 900, 600);
 	obj.setRect2(900, 600);
-	obj.setImage("start.png", render);
+	obj.setImage("start_end.png", render);
 	bool play = false;
 	while (game_start) {
 		int x_mouse, y_mouse;
 		SDL_GetMouseState(&x_mouse, &y_mouse);
-		if (0 <= x_mouse && x_mouse <= 555 && 220 <= y_mouse && y_mouse <= 312) {
-			obj.rect1.x = 900;
+		if (game_start) {
+			if (0 <= x_mouse && x_mouse <= 555 && 220 <= y_mouse && y_mouse <= 312) {
+				obj.rect1.x = 900;
+			}
+			else obj.rect1.x = 0;
 		}
-		else obj.rect1.x = 0;
 		obj.draw(render);
 		while (SDL_PollEvent(&e)) {
 			if (e.type == SDL_QUIT) game_start = false;
@@ -53,7 +56,9 @@ int main() {
 			Mix_Chunk* sound_reload = Mix_LoadWAV("reload.wav");
 			Mix_Chunk* sound_lsb = Mix_LoadWAV("lsb_sound.mp3");
 			Mix_Chunk* lsb_active = Mix_LoadWAV("lsb_on.wav");
+			Mix_Chunk* end_game = Mix_LoadWAV("end_music.mp3");
 			Mix_Music* back_ground = Mix_LoadMUS("Merry Go.mp3");
+
 			Infor infor;
 			infor.setPos(infor.x, infor.y);
 			infor.setRect1(0, 0, infor.w_val, infor.h_val);
@@ -126,6 +131,10 @@ int main() {
 			int enemy_run_time = 0;
 			bool lv1 = true, lv2 = false;
 			bool mute = false;
+			bool da_nhat = false;
+			bool nha = true;
+			bool chem = false;
+			double end_time = 0;
 			Mix_PlayMusic(back_ground, -1);
 			while (play) {
 				frameStart = SDL_GetTicks();
@@ -133,95 +142,115 @@ int main() {
 				int x, y;
 				SDL_GetMouseState(&x, &y);
 				SDL_SetRenderDrawColor(render, 155, 100, 100, SDL_ALPHA_OPAQUE);
-				cout << sound.volumn << endl;
-				while (SDL_PollEvent(&e)) {
-					if (e.type == SDL_QUIT) play = false;
-					if (e.type == SDL_MOUSEBUTTONDOWN) {
-						if (sound.x <= x && x <= sound.x + sound.w_val && sound.y <= y && y <= sound.y + sound.h_val) {
-							if (e.button.button == SDL_BUTTON_LEFT) {
-								if (!(sound.rect2.w < 30) and !mute) {
-									sound.update_volumn(mute);
-								}
-								else mute = true;
-								if (!(sound.rect2.w > 60) and mute) {
-									sound.update_volumn(mute);
-								}
-								else mute = false;
-							}
-							Mix_VolumeMusic(sound.volumn);
-						}
-						else {
-							if (player.get_typeWeapon() == 1) {
-								if (e.button.button == SDL_BUTTON_LEFT and bang_dan > 0) {
-									Bullet* bullet = new Bullet();
-									bullet->setPos(hand.get_x() - 10, hand.get_y() + 5);
-									bullet->setRect1(0, 0, bullet->w_val, bullet->h_val);
-									bullet->setRect2(bullet->w_val, bullet->h_val);
-									bullet->setImage("bullet1.png", render);
-									bullet->isShooting = true;
-									bulletVec.push_back(bullet);
-									bang_dan -= 1;
-									Mix_PlayChannel(-1, sound_gun, 0);
-								}
-								else if (e.button.button == SDL_BUTTON_LEFT and bang_dan == 0) {
-									Mix_PlayChannel(-1, sound_reload, 0);
-								}
-							}
-							else if (player.get_typeWeapon() == 2) {
+				//cout << sound.volumn << endl;
+				if (player.player_blood > 0) {
+					while (SDL_PollEvent(&e)) {
+						if (e.type == SDL_QUIT) play = false;
+						if (e.type == SDL_MOUSEBUTTONDOWN) {
+							if (sound.x <= x && x <= sound.x + sound.w_val && sound.y <= y && y <= sound.y + sound.h_val) {
 								if (e.button.button == SDL_BUTTON_LEFT) {
-									if (lsb.lsb_on == false) {
-										lsb.setSprite(50, 10, 0);
-										Mix_PlayChannel(-1, lsb_active, 0);
-										lsb.lsb_on = true;
+									if (!(sound.rect2.w < 30) and !mute) {
+										sound.update_volumn(mute);
 									}
-									else {
-										Mix_PlayChannel(-1, sound_lsb, 0);
+									else mute = true;
+									if (!(sound.rect2.w > 60) and mute) {
+										sound.update_volumn(mute);
 									}
+									else mute = false;
+								}
+								Mix_VolumeMusic(sound.volumn);
+							}
+							else {
+								if (player.get_typeWeapon() == 1) {
+									if (e.button.button == SDL_BUTTON_LEFT and bang_dan > 0) {
+										Bullet* bullet = new Bullet();
+										bullet->setPos(hand.get_x() - 10, hand.get_y() + 5);
+										bullet->setRect1(0, 0, bullet->w_val, bullet->h_val);
+										bullet->setRect2(bullet->w_val, bullet->h_val);
+										bullet->setImage("bullet1.png", render);
+										bullet->isShooting = true;
+										bulletVec.push_back(bullet);
+										bang_dan -= 1;
+										Mix_PlayChannel(-1, sound_gun, 0);
+									}
+									else if (e.button.button == SDL_BUTTON_LEFT and bang_dan == 0) {
+										Mix_PlayChannel(-1, sound_reload, 0);
+									}
+								}
+								else if (player.get_typeWeapon() == 2) {
+									if (e.button.button == SDL_BUTTON_LEFT) {
+										if (lsb.lsb_on == false) {
+											lsb.setSprite(50, 10, 0);
+											Mix_PlayChannel(-1, lsb_active, 0);
+											lsb.lsb_on = true;
+										}
+										else if (chem == false and lsb.lsb_on == true) {
+											Mix_PlayChannel(-1, sound_lsb, 0);
+											chem = true;
+											lsb.angle = 90;
+											if (obj.checkColli(lsb.getRect2(), enemy.getRect2())) enemy.blood -= enemy.blood;
+										}
+										else if (chem == true and lsb.lsb_on == true)
+										{
+											lsb.angle = 0;
+											chem = false;
+										}
+									}
+
 								}
 							}
 						}
-					}
-					if (e.type == SDL_KEYDOWN) {
-						if (e.key.keysym.sym == SDLK_SPACE) {
-							if (ong == true) {
-								ong = false;
-								player.y_step = -5;
-								player.isJumping = true;
-								Mix_PlayChannel(-1, sound_jump, 0);
-								player.rect1.y = 0;
-								player.rect1.x = 31;
+
+						if (e.type == SDL_KEYDOWN) {
+							if (e.key.keysym.sym == SDLK_SPACE) {
+								if (ong == true) {
+									ong = false;
+									player.y_step = -5;
+									player.isJumping = true;
+									Mix_PlayChannel(-1, sound_jump, 0);
+									player.rect1.y = 0;
+									player.rect1.x = 31;
+								}
 							}
+							if (e.key.keysym.sym == SDLK_a) {
+								player.x_step = -3;
+								player.isMoving = true;
+							}
+							if (e.key.keysym.sym == SDLK_d) {
+								player.x_step = 3;
+								player.isMoving = true;
+							}
+							if (e.key.keysym.sym == SDLK_r && bang_dan < 30) {
+								Mix_PlayChannel(-1, sound_reload, 0);
+								bulletVec.clear();
+								bang_dan = 30;
+							}
+							if (e.key.keysym.sym == SDLK_g and player.get_typeWeapon() == 0) {
+								da_nhat = false;
+							}
+							else if (e.key.keysym.sym == SDLK_g and player.get_typeWeapon() != 0) {
+								da_nhat = true;
+							}
+
 						}
-						if (e.key.keysym.sym == SDLK_a) {
-							player.x_step = -3;
-							player.isMoving = true;
-						}
-						if (e.key.keysym.sym == SDLK_d) {
-							player.x_step = 3;
-							player.isMoving = true;
-						}
-						if (e.key.keysym.sym == SDLK_r && bang_dan < 30) {
-							Mix_PlayChannel(-1, sound_reload, 0);
-							bulletVec.clear();
-							bang_dan = 30;
-						}
-					}
-					if (e.type == SDL_KEYUP) {
-						if (e.key.keysym.sym == SDLK_a) {
-							player.x_step = 0;
-							player.isMoving = false;
-						}
-						if (e.key.keysym.sym == SDLK_d) {
-							player.x_step = 0;
-							player.isMoving = false;
+						if (e.type == SDL_KEYUP) {
+							if (e.key.keysym.sym == SDLK_a) {
+								player.x_step = 0;
+								player.isMoving = false;
+							}
+							if (e.key.keysym.sym == SDLK_d) {
+								player.x_step = 0;
+								player.isMoving = false;
+							}
 						}
 					}
 				}
 				if (player.rect2.y >= 600) player.player_blood = 0; // neu roi xuong khoi game thi thua luon
-				if (player.rect2.x < 400) player.rect2.x += player.x_step; // nhan vat di chuyen den giua man hinh thi khong di, chi co camera move
-				// ---- kiem tra dang o lv 1
+
 				if (lv1) {
 					map1.drawMap(render); // ve map
+					if (player.rect2.x < 400) player.rect2.x += player.x_step; // nhan vat di chuyen den giua man hinh thi khong di, chi co camera move
+				// ---- kiem tra dang o lv 1
 					// kiem tra va cham theo huong cua x axis cua nhan vat voi block map
 					for (int i = 0; i < map1.blockVec.size(); i++) {
 						map1.blockVec[i]->rect2.x -= player.x_step; // di chuyen camera theo nhan vat, tat ca object di chuyen nguoc lai
@@ -237,7 +266,6 @@ int main() {
 					}
 					// kiem tra va cham theo axis y cua nhan vat voi block map
 					if ((!player.isJumping and !ong) || (!player.isJumping && !cham_tuong)) { // neu ma ko nhay va khong cham tuong suy ra player roi xuong
-						player.rect1.x = 0; // animation fall
 						player.y_step = 10; // roi xuong
 					}
 					else {
@@ -262,6 +290,8 @@ int main() {
 				//kiem tra dang o lv2 
 				if (lv2) {
 					map2.drawMap(render);
+					if (player.rect2.x < 400) player.rect2.x += player.x_step; // nhan vat di chuyen den giua man hinh thi khong di, chi co camera move
+				// ---- kiem tra dang o lv 1
 					for (int i = 0; i < map2.blockVec.size(); i++) {
 						map2.blockVec[i]->rect2.x -= player.x_step;
 						if (obj.checkColli(player.getRect2(), map2.blockVec[i]->getRect2())) {
@@ -275,7 +305,6 @@ int main() {
 						}
 					}
 					if ((!player.isJumping and !ong) || (!player.isJumping && !cham_tuong)) {
-						player.rect1.x = 0;
 						player.y_step = 10;
 					}
 					else {
@@ -312,38 +341,46 @@ int main() {
 				}
 				player.setFlip(player.moveL, player.moveR);
 				//-------------------------------------------
-				//neu di chuyen thi spite
-				if (player.isMoving) {
+				//neu di chuyen thi sprite
+				if (player.isMoving and !player.isJumping) {
 					player.rect1.y = player.Move;
 					player.setSprite(60, 31, 1);
 				}
 				//else player.rect1.y = player.Idle;
-				//if (gun.lsb_on) {
-					//gun.setSprite();
-				//}
-				if (enemy.blood > 0) enemy.draw(render);
 
-				//cho enemy di chuyen nguoc voi camera
-				enemy.rect2.x -= player.x_step;
-				//
-
-				//cho enemy di lai 
-				enemy_run_time++;
-				if (enemy_run_time >= 80) {
-					enemy.rect2.x -= 3;
-					if (enemy_run_time >= 160) enemy_run_time = 0;
+				if (enemy.blood > 0 and enemy.isAlive) { // neu enemy con song va con mau
+					//
+					//cho enemy di lai 
+					enemy_run_time++;
+					if (enemy_run_time >= 80) {
+						enemy.rect2.x -= 3;
+						if (enemy_run_time >= 160) enemy_run_time = 0;
+					}
+					else enemy.rect2.x += 3;// enemy di lai
+					if (obj.checkColli(player.getRect2(), enemy.getRect2())) { // kiem tra va cham nhan vat voi enemy
+						player.player_blood -= 5;
+					}
 				}
-				else enemy.rect2.x += 3;
-				// enemy di lai
+				else if (enemy.blood <= 0 and enemy.isAlive) { // het mau nhung ma van song va thanh vat pham bonus mau
+					enemy.rect1.x = 60;
+					if (obj.checkColli(player.getRect2(), enemy.getRect2())) { // neu ma nguoi choi an thi huy luon bonus
+						player.player_blood += 50;
+						if (player.player_blood > 260) player.player_blood = 260;
+						enemy.isAlive = false;
+					}
+				}
 
 				//kiem tra nhat vu khi va set type weapon cho player
-				if (player.get_typeWeapon() == 0) {
+				if (!da_nhat) {
 					if (obj.checkColli(gun.getRect2(), player.getRect2())) {
 						player.weapon_on = 1;
 					}
 					if (obj.checkColli(lsb.getRect2(), player.getRect2())) {
 						player.weapon_on = 2;
 					}
+				}
+				else if (da_nhat) {
+					player.weapon_on = 0;
 				}
 				//
 
@@ -358,7 +395,6 @@ int main() {
 				head.setFlip(player.moveL, player.moveR);
 				head.draw_with_angle(render);
 				hand.getAngle(x, y);
-				hand.draw_with_angle(render);
 				// lay goc va ve cho head va hand theo mouse x y
 
 				// kiem tra xem nhat vu khi gi
@@ -381,36 +417,58 @@ int main() {
 					gun.update(player.rect2.x, player.rect2.y - 20);
 				}
 				else {
+					gun.angle = 90;
 					gun.rect2.x -= player.x_step;
-					gun.draw(render);
 				}
 				if (player.get_typeWeapon() == 2) {
-					lsb.getAngle(x, y);
-					lsb.draw_with_angle(render);
-					lsb.update(player.rect2.x, player.rect2.y - 130);
+					//lsb.getAngle(x, y);
+					//
+					if (lsb.lsb_on) {
+						lsb.setSprite(50, 10, 0);
+					}//kich hoat sprite light saber
+					lsb.update(player.rect2.x + 5, player.rect2.y - 50);
 				}
 				else {
 					lsb.angle = 90;
 					lsb.rect2.x -= player.x_step;
-					lsb.draw_with_angle(render);
 				}
-				if (player.player_blood <= 0) {
-					player.player_blood = 0;
-					player.is_alive = false;
-					play = 0;
-				} // kiem tra xem nhat vu khi gi, khong nhat thi update vitri moi
+				// kiem tra xem nhat vu khi gi, khong nhat thi update vitri moi
+				if (enemy.isAlive) {
+					enemy.draw(render);
+					//cho enemy di chuyen nguoc voi camera
+					enemy.rect2.x -= player.x_step;
+				}
 
 				// ve va update vi tri
+				player.draw(render);
+				lsb.draw_with_angle(render);
+				gun.draw_with_angle(render);
 				sound.draw(render);
 				infor.draw(render);
 				p_blood.draw(render);
 				e_blood.draw(render);
-				player.draw(render);
+				hand.draw_with_angle(render);
 				e_blood.update(enemy.rect2.x - 5, enemy.rect2.y - 20);
-				hand.update(player.rect2.x, player.rect2.y - 10);
+				hand.update(player.rect2.x + 10, player.rect2.y + 5);
 				head.update(player.rect2.x, player.rect2.y - 20);
 				//	
-
+				//kiem tra nhan vat con alive hay khong de play again
+				if (player.player_blood <= 0) {
+					Mix_HaltMusic();//stop background music
+					player.player_blood = 0;
+					player.is_alive = false;
+					obj.rect1.y = 600;
+					obj.rect1.x = 0;
+					end_time += 0.05;
+					if (end_time >= 0 and end_time < 1) { Mix_PlayChannel(1, end_game, 0); }
+					else if (end_time > 30) {
+						end_time = 0;
+						obj.rect1.y = 0;
+						obj.rect1.x = 0;
+						play = 0;
+					}
+					obj.draw(render);
+				}
 				// gioi han fps
 				frameTime = SDL_GetTicks() - frameStart;
 				if (frameDelay > frameTime)
@@ -420,7 +478,6 @@ int main() {
 				SDL_RenderPresent(render);
 				SDL_RenderClear(render);
 			}
-
 		}
 		SDL_RenderPresent(render);
 		SDL_RenderClear(render);
