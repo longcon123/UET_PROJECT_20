@@ -13,6 +13,8 @@ public:
 	const string water = "water.png";
 	const string gai = "gai.png";
 	const string door = "door.png";
+	const string door2 = "door2.png";
+	const string key = "key.png";
 	int max_w = 20;
 	int max_h = 80;
 	char block_type;

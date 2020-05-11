@@ -25,6 +25,7 @@ public:
 	const int Move = 90;
 	const int Idle = 0;
 	const int Jump = 0;
-	double player_blood = 260;
+	int player_blood = 260;
+	bool get_key = false;
 };
 #endif // !PLAYER_H

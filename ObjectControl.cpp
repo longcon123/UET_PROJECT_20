@@ -43,7 +43,8 @@ void ObjectControl::setSprite(int x_max, int x_step, bool rv) {
 		if (rv) rect1.x = 0;
 		else rect1.x = x_max;
 	}
-	else {
+	else
+	{
 		f += animSpeed;
 		if (f > fc) {
 			f -= fc;

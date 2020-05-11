@@ -16,7 +16,7 @@ public:
 	int x_step = 10;
 	int y_step = 0;
 	int speed = 1;
-	int blood = 70;
+	int blood = 60;
 	bool isAlive = true;
 };
 #endif
