@@ -12,6 +12,8 @@ public:
 	const int y_p = 32;
 	int w_val_e = 70;
 	int h_val_e = 10;
+	int w_val_b = 500;
+	int h_val_b = 50;
 
 };
 #endif // !BLOOD_H

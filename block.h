@@ -15,6 +15,7 @@ public:
 	const string door = "door.png";
 	const string door2 = "door2.png";
 	const string key = "key.png";
+	const string elevator = "elevator.png";
 	int max_w = 20;
 	int max_h = 80;
 	char block_type;

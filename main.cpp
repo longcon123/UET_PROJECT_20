@@ -1,6 +1,7 @@
 //code them va cham nhan vat voi enemy, code them bo vu khi, code them victory win;
 #define SDL_MAIN_HANDLED
 #include "ObjectControl.h"
+#include "boss.h"
 #include "player.h"
 #include "head.h"
 #include "hand.h"
@@ -13,7 +14,7 @@
 #include "blood.h"
 #include "enemy.h"
 #include "sound.h"
-
+#include "bua.h"
 const int WIDTH = 900;
 const int HEIGHT = 600;
 
@@ -57,6 +58,7 @@ int main() {
 			Mix_Chunk* sound_lsb = Mix_LoadWAV("lsb_sound.mp3");
 			Mix_Chunk* lsb_active = Mix_LoadWAV("lsb_on.wav");
 			Mix_Chunk* end_game = Mix_LoadWAV("end_music.mp3");
+			Mix_Chunk* bua_sound = Mix_LoadWAV("bua.wav");
 			Mix_Music* back_ground = Mix_LoadMUS("Merry Go.mp3");
 
 			Infor infor;
@@ -79,11 +81,21 @@ int main() {
 			enemy.setRect1(0, 0, enemy.w_val, enemy.h_val);
 			enemy.setRect2(enemy.w_val, enemy.h_val);
 			enemy.setImage("enemy.png", render);
+			Boss boss;
+			boss.setPos(boss.x_pos, boss.y_pos);
+			boss.setRect1(0, 0, boss.w_val, boss.h_val);
+			boss.setRect2(boss.w_val, boss.h_val);
+			boss.setImage("boss.png", render);
 			Blood e_blood;
 			e_blood.setPos(enemy.x_pos - 5, enemy.y_pos - 20);
 			e_blood.setRect1(0, 0, enemy.x_pos, enemy.y_pos);
 			e_blood.setRect2(e_blood.w_val_e, e_blood.h_val_e);
 			e_blood.setImage("enemy_blood.png", render);
+			Blood b_blood;
+			b_blood.setPos(boss.x_pos - 5, boss.y_pos - 20);
+			b_blood.setRect1(0, 0, boss.x_pos, boss.y_pos);
+			b_blood.setRect2(b_blood.w_val_b, b_blood.h_val_b);
+			b_blood.setImage("b_blood.png", render);
 			Player player;
 			player.setPos(player.x_pos, player.y_pos);
 			player.setRect1(0, 0, player.w_val, player.h_val);
@@ -109,15 +121,21 @@ int main() {
 			gun.setRect1(0, 0, gun.w_val, gun.h_val);
 			gun.setRect2(gun.w_val, gun.h_val);
 			gun.setImage("gun.png", render);
+			Bua bua;
+			bua.setPos(bua.x, bua.y);
+			bua.setRect1(0, 0, bua.w_val, bua.h_val);
+			bua.setRect2(bua.w_val, bua.h_val);
+			bua.setImage("bua.png", render);
 			vector <Bullet*> bulletVec;
 			//bullet.set_is_move(true);
 			const int fps = 100;
 			const int frameDelay = 1000 / fps;
 			int frameTime;
 			Uint32 frameStart;
-			Map map1, map2;
+			Map map1, map2, map3;
 			map1.loadLevel(render, 1);
 			map2.loadLevel(render, 2);
+			map3.loadLevel(render, 3);
 			player.player_blood = 260;
 			player.weapon_on = 0;
 			enemy.blood = 70;
@@ -129,7 +147,7 @@ int main() {
 			bool cham_t = false;
 			bool duoi = false;
 			int enemy_run_time = 0;
-			bool lv1 = true, lv2 = false;
+			bool lv1 = 1, lv2 = 0, lv3 = 0;
 			bool mute = false;
 			bool da_nhat = false;
 			bool nha = true;
@@ -138,10 +156,11 @@ int main() {
 			Mix_PlayMusic(back_ground, -1);
 			while (play) {
 				frameStart = SDL_GetTicks();
-
+				// lay vi tri chuot neu x player < x chuot set flip horizontal = true
+				//------------------------------------------
 				int x, y;
 				SDL_GetMouseState(&x, &y);
-				SDL_SetRenderDrawColor(render, 155, 100, 100, SDL_ALPHA_OPAQUE);
+				SDL_SetRenderDrawColor(render, 155, 130, 100, SDL_ALPHA_OPAQUE);
 				//cout << sound.volumn << endl;
 				if (player.player_blood > 0) {
 					while (SDL_PollEvent(&e)) {
@@ -189,6 +208,7 @@ int main() {
 											chem = true;
 											lsb.angle = 90;
 											if (obj.checkColli(lsb.getRect2(), enemy.getRect2())) enemy.blood -= enemy.blood;
+											if (obj.checkColli(boss.getRect2(), lsb.getRect2()) and lv3) boss.blood -= 100;
 										}
 										else if (chem == true and lsb.lsb_on == true)
 										{
@@ -201,7 +221,7 @@ int main() {
 							}
 						}
 
-						if (e.type == SDL_KEYDOWN) {
+						else if (e.type == SDL_KEYDOWN) {
 							if (e.key.keysym.sym == SDLK_SPACE) {
 								if (ong == true) {
 									ong = false;
@@ -233,7 +253,7 @@ int main() {
 							}
 
 						}
-						if (e.type == SDL_KEYUP) {
+						else if (e.type == SDL_KEYUP) {
 							if (e.key.keysym.sym == SDLK_a) {
 								player.x_step = 0;
 								player.isMoving = false;
@@ -246,7 +266,7 @@ int main() {
 					}
 				}
 				if (player.rect2.y >= 600) player.player_blood = 0; // neu roi xuong khoi game thi thua luon
-
+				
 				if (lv1) {
 					map1.drawMap(render); // ve map
 					if (player.rect2.x < 400) player.rect2.x += player.x_step; // nhan vat di chuyen den giua man hinh thi khong di, chi co camera move
@@ -255,7 +275,7 @@ int main() {
 					for (int i = 0; i < map1.blockVec.size(); i++) {
 						map1.blockVec[i]->rect2.x -= player.x_step; // di chuyen camera theo nhan vat, tat ca object di chuyen nguoc lai
 						if (obj.checkColli(player.getRect2(), map1.blockVec[i]->getRect2())) {// neu va cham
-
+							if (map1.blockVec[i]->block_type == 'n' and player.get_key) { lv1 = false; lv2 = false, lv3 = true;}
 							if (player.x_step > 0) { // new xstep > 0 => nhan vat dang tien thi se k cho tien nua
 								player.rect2.x = map1.blockVec[i]->rect2.x - player.rect2.w; cham_t = true; // khong cho tien
 							}
@@ -296,6 +316,7 @@ int main() {
 						map2.blockVec[i]->rect2.x -= player.x_step;
 						if (obj.checkColli(player.getRect2(), map2.blockVec[i]->getRect2())) {
 							if (map2.blockVec[i]->block_type == 'd') { lv2 = false; lv1 = true; }
+							else if (map2.blockVec[i]->block_type == 'k') { map2.blockVec[i]->rect1.x = 40; player.get_key = true; player.player_blood += 50; }
 							if (player.x_step > 0) {
 								player.rect2.x = map2.blockVec[i]->rect2.x - player.rect2.w; cham_t = true;
 							}
@@ -318,17 +339,70 @@ int main() {
 					for (int i = 0; i < map2.blockVec.size(); i++) {
 						if (obj.checkColli(player.getRect2(), map2.blockVec[i]->getRect2())) {
 							if (map2.blockVec[i]->block_type == 'w') player.player_blood -= 1;
-							else if (map2.blockVec[i]->block_type == 's') player.player_blood -= 10;
+							else if (map2.blockVec[i]->block_type == 's') player.player_blood -= 5;
 							if (player.y_step > 0) { player.rect2.y = map2.blockVec[i]->rect2.y - player.rect2.h; player.y_step = 0; cham_tuong = false; ong = true; }
 							if (player.y_step < 0) { player.rect2.y = map2.blockVec[i]->rect2.y + map2.blockVec[i]->rect2.h; cham_tuong = true; ong = false; }
 						}
 					}
 				}
 				//-------------------------------------------------------------------------------------------------------------------------------------
+				if (lv3) {
+					map3.drawMap(render);
+					bua.draw(render);
+					if(boss.blood > 0) boss.draw(render);
+					b_blood.draw(render);
+					bua.rect2.x -= player.x_step;
+					bua.rect2.y -= 2;
+					boss.rect2.x -= player.x_step;
+					b_blood.update(boss.rect2.x-170, boss.rect2.y-100);
+					//bua.rect1.y -= 1;
+					if (bua.rect2.y <= 60) {
+						bua.rect2.y = 310;
+						Mix_PlayChannel(-1, bua_sound, 0);
+					}
+					if (obj.checkColli(bua.getRect2(), player.getRect2())) player.player_blood -= 50;
+					if (player.rect2.x < 500) player.rect2.x += player.x_step; // nhan vat di chuyen den giua man hinh thi khong di, chi co camera move
+				// ---- kiem tra dang o lv 1
+					for (int i = 0; i < map3.blockVec.size(); i++) {
+						map3.blockVec[i]->rect2.x -= player.x_step;
+						if (obj.checkColli(player.getRect2(), map3.blockVec[i]->getRect2())) {
+							if (player.x_step > 0) {
+								player.rect2.x = map3.blockVec[i]->rect2.x - player.rect2.w; cham_t = true;
+							}
+							if (player.x_step < 0) {
+								player.rect2.x = map3.blockVec[i]->rect2.x + map3.blockVec[i]->rect2.w; cham_t = true;
+							}
+						}
+					}
+					if ((!player.isJumping and !ong) || (!player.isJumping && !cham_tuong)) {
+						player.y_step = 10;
+					}
+					else {
+						tjump += 0.05;
 
-				// lay vi tri chuot neu x player < x chuot set flip horizontal = true
-				//------------------------------------------
-
+					}
+					if (tjump >= 1.5 || cham_tuong || ong) {
+						tjump = 0; player.isJumping = false;
+					}
+					player.rect2.y += player.y_step;
+					for (int i = 0; i < map3.blockVec.size(); i++) {
+						if (obj.checkColli(player.getRect2(), map3.blockVec[i]->getRect2())) {
+							if (map3.blockVec[i]->block_type == 'e') {
+								map3.blockVec[i]->rect2.x += 2;
+								player.x_step = 1;
+							}
+							else if (map3.blockVec[i]->block_type == 'u' and map3.blockVec[i]->rect2.y > 50) {
+								map3.blockVec[i]->rect2.y -= 1;
+							}
+							if (map3.blockVec[i]->block_type == 'w') player.player_blood -= 1;
+							else if (map3.blockVec[i]->block_type == 's') player.player_blood -= 5;
+							else if (map3.blockVec[i]->block_type == 'n' and boss.blood <= 0) { play = 0; }
+							if (player.y_step > 0) { player.rect2.y = map3.blockVec[i]->rect2.y - player.rect2.h; player.y_step = 0; cham_tuong = false; ong = true; }
+							if (player.y_step < 0) { player.rect2.y = map3.blockVec[i]->rect2.y + map3.blockVec[i]->rect2.h; cham_tuong = true; ong = false; }
+						}
+					}
+				}
+				
 				if (x >= player.get_x())
 				{
 					player.moveL = false;
@@ -340,14 +414,14 @@ int main() {
 					player.moveL = true;
 				}
 				player.setFlip(player.moveL, player.moveR);
-				//-------------------------------------------
+				//-----------------------------------------
 				//neu di chuyen thi sprite
 				if (player.isMoving and !player.isJumping) {
 					player.rect1.y = player.Move;
 					player.setSprite(60, 31, 1);
 				}
 				//else player.rect1.y = player.Idle;
-
+				
 				if (enemy.blood > 0 and enemy.isAlive) { // neu enemy con song va con mau
 					//
 					//cho enemy di lai 
@@ -369,10 +443,10 @@ int main() {
 						enemy.isAlive = false;
 					}
 				}
-
+				
 				//kiem tra nhat vu khi va set type weapon cho player
 				if (!da_nhat) {
-					if (obj.checkColli(gun.getRect2(), player.getRect2())) {
+					if (obj.checkColli(gun.getRect2(), player.getRect2()) ) { 
 						player.weapon_on = 1;
 					}
 					if (obj.checkColli(lsb.getRect2(), player.getRect2())) {
@@ -386,7 +460,11 @@ int main() {
 
 				// update blood cho enemy va player
 				p_blood.rect2.w = player.player_blood;
+				p_blood.rect1.w = player.player_blood;
 				e_blood.rect2.w = enemy.blood;
+				e_blood.rect1.w = enemy.blood;
+				b_blood.rect2.w = boss.blood;
+				b_blood.rect1.w = boss.blood;
 				// update blood cho enemy va player
 
 
@@ -412,6 +490,7 @@ int main() {
 						bulletVec[i]->draw_with_angle(render);
 						bulletVec[i]->outScreen();
 						if (obj.checkColli(enemy.getRect2(), bulletVec[i]->getRect2())) enemy.blood -= 10;
+						if (obj.checkColli(boss.getRect2(), bulletVec[i]->getRect2()) and lv3) boss.blood -= 50;
 						bulletVec[i]->isShooting = false;
 					}
 					gun.update(player.rect2.x, player.rect2.y - 20);
@@ -426,19 +505,20 @@ int main() {
 					if (lsb.lsb_on) {
 						lsb.setSprite(50, 10, 0);
 					}//kich hoat sprite light saber
-					lsb.update(player.rect2.x + 5, player.rect2.y - 50);
+					lsb.update(player.rect2.x+5, player.rect2.y - 50);
+					
 				}
 				else {
 					lsb.angle = 90;
 					lsb.rect2.x -= player.x_step;
 				}
 				// kiem tra xem nhat vu khi gi, khong nhat thi update vitri moi
-				if (enemy.isAlive) {
-					enemy.draw(render);
+				if (enemy.isAlive and lv2 or enemy.isAlive and lv1 or lv3) {
+					enemy.draw(render); 
 					//cho enemy di chuyen nguoc voi camera
 					enemy.rect2.x -= player.x_step;
 				}
-
+				
 				// ve va update vi tri
 				player.draw(render);
 				lsb.draw_with_angle(render);
@@ -449,11 +529,11 @@ int main() {
 				e_blood.draw(render);
 				hand.draw_with_angle(render);
 				e_blood.update(enemy.rect2.x - 5, enemy.rect2.y - 20);
-				hand.update(player.rect2.x + 10, player.rect2.y + 5);
+				hand.update(player.rect2.x+10, player.rect2.y+5);
 				head.update(player.rect2.x, player.rect2.y - 20);
 				//	
 				//kiem tra nhan vat con alive hay khong de play again
-				if (player.player_blood <= 0) {
+				if(player.player_blood <= 0) {
 					Mix_HaltMusic();//stop background music
 					player.player_blood = 0;
 					player.is_alive = false;
@@ -478,7 +558,7 @@ int main() {
 				SDL_RenderPresent(render);
 				SDL_RenderClear(render);
 			}
-		}
+		}	
 		SDL_RenderPresent(render);
 		SDL_RenderClear(render);
 	}

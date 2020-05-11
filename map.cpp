@@ -6,6 +6,7 @@ void Map::loadLevel(SDL_Renderer* render, int lv) {
 		for (int j = 0; j < block_ref.max_h; j++) {
 			if (lv == 1) brick_type = lv1[i][j];
 			else if (lv == 2) brick_type = lv2[i][j];
+			else if (lv == 3) brick_type = lv3[i][j];
 			if (brick_type != 0) {
 				Block* block = new Block();
 				block->rect2.x = j * 40;
@@ -46,6 +47,34 @@ void Map::loadLevel(SDL_Renderer* render, int lv) {
 					block->setRect2(block->w_val, block->h_val);
 					block->setImage(block->door, render);
 					block->block_type = 'd';
+					break;
+				case 6:
+					block->setPos(block->rect2.x, block->rect2.y);
+					block->setRect1(0, 0, block->w_val, block->h_val);
+					block->setRect2(block->w_val, block->h_val);
+					block->setImage(block->key, render);
+					block->block_type = 'k';
+					break;
+				case 7:
+					block->setPos(block->rect2.x, block->rect2.y);
+					block->setRect1(0, 0, block->w_val, block->h_val);
+					block->setRect2(block->w_val, block->h_val);
+					block->setImage(block->door2, render);
+					block->block_type = 'n';
+					break;
+				case 8:
+					block->setPos(block->rect2.x, block->rect2.y);
+					block->setRect1(0, 0, block->w_val, block->h_val);
+					block->setRect2(block->w_val, block->h_val);
+					block->setImage(block->elevator, render);
+					block->block_type = 'e';
+					break;
+				case 9:
+					block->setPos(block->rect2.x, block->rect2.y);
+					block->setRect1(0, 0, block->w_val, block->h_val);
+					block->setRect2(block->w_val, block->h_val);
+					block->setImage(block->elevator, render);
+					block->block_type = 'u';
 					break;
 				default:
 					break;

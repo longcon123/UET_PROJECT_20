@@ -15,9 +15,8 @@ public:
 	int y_val = gun.y_val - 5;
 	int w_val = 5;
 	int h_val = 30;
-	int bullet_type1 = 50;
-	int bullet_type2 = 100;
-	int bullet_type3 = 150;
+	int b_w_val = 70;
+	int b_h_val = 40;
 	bool isShooting;
 	int speed = 1;
 	double new_x, new_y;
